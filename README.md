@@ -1,2 +1,2 @@
 # docker-mcollectived
-Basic Debian with just mcollectived added.
+Alpine with just mcollectived added.
