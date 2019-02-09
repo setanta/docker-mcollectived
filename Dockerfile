@@ -1,15 +1,17 @@
-FROM alpine:3.5
+FROM alpine:3.9
 
-RUN apk add --update ruby ruby-json ca-certificates wget
-RUN gem install --no-rdoc --no-ri stomp
+ARG MCOLLECTIVE_VERSION=2.12.4
 
-RUN wget -q https://github.com/puppetlabs/marionette-collective/archive/2.9.1.tar.gz \
-	 -O mcollective.tar.gz
-RUN tar xf mcollective.tar.gz
-RUN mv /marionette-collective-2.9.1 mcollective
+RUN apk add --update ruby ruby-json ca-certificates
+RUN apk add --update --virtual build-dependencies build-base ruby-dev wget \
+ && gem install --no-rdoc --no-ri stomp etc \
+ && wget -q https://github.com/puppetlabs/marionette-collective/archive/$MCOLLECTIVE_VERSION.tar.gz -O mcollective.tar.gz \
+ && tar xf mcollective.tar.gz \
+ && apk del build-dependencies
 
-RUN mkdir -p /etc/mcollective
-RUN mkdir -p /usr/share/mcollective/plugins
+RUN mv /marionette-collective-$MCOLLECTIVE_VERSION /mcollective
+
+RUN mkdir -p /etc/mcollective /usr/share/mcollective/plugins
 
 RUN cp /mcollective/etc/facts.yaml.dist /etc/mcollective/facts.yaml
 RUN cp /mcollective/etc/*.erb /etc/mcollective
@@ -24,8 +26,6 @@ RUN cp /mcollective/bin/mcollectived /usr/sbin/
 RUN cp /mcollective/bin/mco /usr/bin/
 
 RUN rm mcollective.tar.gz
-RUN rm -rf mcollective
-RUN rm -rf var/cache/apk/*
+RUN rm -rf /mcollective /var/cache/apk/*
 
 ENTRYPOINT ["mcollectived", "--no-daemonize"]
-
